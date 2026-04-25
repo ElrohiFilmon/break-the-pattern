@@ -5,12 +5,6 @@ import type { UserProfile } from '@/lib/user-profile'
 
 export const maxDuration = 60
 
-// Use the user's own Gemini API key, stored in the `GEMINI` env var.
-// Configure it in v0: top-right gear → Vars → add key `GEMINI`.
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI,
-})
-
 export async function POST(req: Request) {
   try {
     const {
@@ -25,10 +19,21 @@ export async function POST(req: Request) {
       )
     }
 
-    const system = buildJelesSystemPrompt(profile ?? null)
-    const modelMessages = await convertToModelMessages(messages)
+    // Read the key fresh on every request so module-load caching can't strand
+    // us with `apiKey: undefined`. Accept either GEMINI (user's chosen name)
+    // or the SDK's default GOOGLE_GENERATIVE_AI_API_KEY.
+    const apiKey =
+      process.env.GEMINI ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      ''
 
-    if (!process.env.GEMINI) {
+    console.log('[v0] Jeles env check:', {
+      hasGEMINI: Boolean(process.env.GEMINI),
+      hasGoogleDefault: Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
+      keyLength: apiKey.length,
+    })
+
+    if (!apiKey) {
       return new Response(
         JSON.stringify({
           error:
@@ -38,9 +43,13 @@ export async function POST(req: Request) {
       )
     }
 
+    // Build the provider per-request with the fresh key.
+    const google = createGoogleGenerativeAI({ apiKey })
+
+    const system = buildJelesSystemPrompt(profile ?? null)
+    const modelMessages = await convertToModelMessages(messages)
+
     const result = streamText({
-      // Direct Google Generative AI provider, authenticated with the user's
-      // own Gemini key from the `GEMINI` env var (configured above).
       model: google('gemini-2.5-flash'),
       system,
       messages: modelMessages,
