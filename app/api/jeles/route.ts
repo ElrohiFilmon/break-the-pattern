@@ -1,8 +1,15 @@
 import { streamText, convertToModelMessages, type UIMessage } from 'ai'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { buildJelesSystemPrompt } from '@/lib/jeles-prompt'
 import type { UserProfile } from '@/lib/user-profile'
 
 export const maxDuration = 60
+
+// Use the user's own Gemini API key, stored in the `GEMINI` env var.
+// Configure it in v0: top-right gear → Vars → add key `GEMINI`.
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI,
+})
 
 export async function POST(req: Request) {
   try {
@@ -21,27 +28,20 @@ export async function POST(req: Request) {
     const system = buildJelesSystemPrompt(profile ?? null)
     const modelMessages = await convertToModelMessages(messages)
 
-    const result = streamText({
-      // ──────────────────────────────────────────────────────────────────
-      // PATH A — Vercel AI Gateway (default, no API key required)
-      // Gemini is zero-config on the Gateway. Just pass a model string.
-      // To switch models, change this string (e.g. 'google/gemini-3-flash').
-      // ──────────────────────────────────────────────────────────────────
-      model: 'google/gemini-3-flash',
+    if (!process.env.GEMINI) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'Missing GEMINI environment variable. Add your Gemini API key in v0: top-right gear → Vars → GEMINI.',
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
-      // ──────────────────────────────────────────────────────────────────
-      // PATH B — Use your own Gemini API key (direct Google provider)
-      // 1. In v0, click the top-right gear → "Vars" and add:
-      //      GOOGLE_GENERATIVE_AI_API_KEY = <your Gemini key>
-      // 2. Replace the `model:` line above with the two lines below
-      //    (and add `import { google } from '@ai-sdk/google'` at the top):
-      //
-      //      import { google } from '@ai-sdk/google'
-      //      ...
-      //      model: google('gemini-2.5-flash'),
-      //
-      // The AI SDK auto-reads GOOGLE_GENERATIVE_AI_API_KEY from env.
-      // ──────────────────────────────────────────────────────────────────
+    const result = streamText({
+      // Direct Google Generative AI provider, authenticated with the user's
+      // own Gemini key from the `GEMINI` env var (configured above).
+      model: google('gemini-2.5-flash'),
       system,
       messages: modelMessages,
     })
