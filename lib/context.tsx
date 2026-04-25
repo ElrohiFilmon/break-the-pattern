@@ -18,10 +18,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [history, setHistory] = useState<Challenge[]>([]);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const session = getSession();
     setHistory(session.history);
   }, []);
@@ -44,10 +42,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     refreshHistory();
     setCurrentChallenge(challenge);
   };
-
-  if (!mounted) {
-    return <>{children}</>;
-  }
 
   return (
     <AppContext.Provider
