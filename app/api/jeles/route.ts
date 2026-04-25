@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createGroq } from '@ai-sdk/groq'
+import { groq } from '@ai-sdk/groq'
 import { generateText } from 'ai'
 import { toJelesProfile, type JelesProfile, type ConversationStage } from '@/lib/jeles-engine'
 import type { UserProfile } from '@/app/context/ProfileContext'
-
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
 
 // ─── Addis location data (mirrors jeles-engine for prompt injection) ──────────
 

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createGroq } from '@ai-sdk/groq'
+import { groq } from '@ai-sdk/groq'
 import { generateText } from 'ai'
 import { analyzePattern } from '@/lib/pattern-engine'
 import type { UserProfile as LibUserProfile } from '@/lib/user-profile'
 import type { ConversationMessage } from '@/app/context/ProfileContext'
-
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
 
 // ─── System prompt for TOHI main chat ────────────────────────────────────────
 
