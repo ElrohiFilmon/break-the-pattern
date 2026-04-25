@@ -9,7 +9,10 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
-  swcMinify: true,
+  // Use on-demand ISR for dynamic routes
+  experimental: {
+    isrMemoryCacheSize: 0,
+  },
   // Enable Turbopack for faster builds
   turbopack: {
     resolveAlias: {

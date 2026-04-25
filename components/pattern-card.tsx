@@ -37,8 +37,8 @@ export function PatternCard({ challenge }: PatternCardProps) {
           </span>
           <Button
             variant="ghost"
-            size="xs"
-            className="opacity-0 transition-opacity group-hover:opacity-100"
+            size="sm"
+            className="opacity-0 transition-opacity group-hover:opacity-100 text-xs"
             onClick={(e) => {
               e.preventDefault();
             }}

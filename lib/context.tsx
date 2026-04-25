@@ -68,6 +68,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 export function useAppContext() {
   const context = useContext(AppContext);
   if (!context) {
+    // Return a default context for SSR/build time
+    if (typeof window === 'undefined') {
+      return {
+        currentChallenge: null,
+        setCurrentChallenge: () => {},
+        history: [],
+        refreshHistory: () => {},
+        updateChallenge: () => {},
+        addChallenge: () => {},
+      };
+    }
     throw new Error('useAppContext must be used within AppProvider');
   }
   return context;

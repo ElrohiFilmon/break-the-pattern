@@ -11,6 +11,8 @@ import html2canvas from 'html2canvas';
 import { shareCard, canShare } from '@/lib/share';
 import { analytics } from '@/lib/analytics';
 
+export const dynamic = 'force-dynamic';
+
 export default function ChallengeDetailPage() {
   const params = useParams();
   const { history } = useAppContext();

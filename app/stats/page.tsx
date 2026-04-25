@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/lib/context';
 import { analytics } from '@/lib/analytics';
 
+export const dynamic = 'force-dynamic';
+
 interface StatItem {
   label: string;
   value: number | string;

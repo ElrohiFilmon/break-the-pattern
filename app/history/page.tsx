@@ -8,6 +8,8 @@ import { Empty } from '@/components/ui/empty';
 import { clearHistory as clearStoredHistory } from '@/lib/storage';
 import { analytics } from '@/lib/analytics';
 
+export const dynamic = 'force-dynamic';
+
 export default function HistoryPage() {
   const { history, refreshHistory } = useAppContext();
   const [mounted, setMounted] = useState(false);

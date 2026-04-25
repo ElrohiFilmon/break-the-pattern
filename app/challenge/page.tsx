@@ -11,6 +11,8 @@ import { getAllMockResponses } from '@/lib/mock-responses';
 import { Challenge, Response } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
 
+export const dynamic = 'force-dynamic';
+
 export default function ChallengePage() {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
