@@ -7,12 +7,14 @@ import { ResultsCard } from '@/components/results-card'
 import { PatternBrokenCard } from '@/components/pattern-broken-card'
 import { ErrorState } from '@/components/error-state'
 import { Survey } from '@/components/survey'
+import { NicheResults } from '@/components/niche-results'
+import type { Niche } from '@/components/niche-buttons'
 import type { PatternBreak } from '@/lib/types'
 import type { StoredProfile } from '@/lib/user-profile'
 import { loadProfile, saveProfile } from '@/lib/user-profile'
 import type { UserProfile } from '@/lib/user-profile'
 
-type AppState = 'hydrating' | 'survey' | 'idle' | 'loading' | 'results' | 'error'
+type AppState = 'hydrating' | 'survey' | 'idle' | 'loading' | 'results' | 'error' | 'niche'
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('hydrating')
@@ -20,6 +22,7 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState('')
   const [showCard, setShowCard] = useState(false)
   const [profile, setProfile] = useState<StoredProfile | null>(null)
+  const [niche, setNiche] = useState<Niche | null>(null)
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -110,6 +113,12 @@ export default function Home() {
     setResults(null)
     setShowCard(false)
     setErrorMessage('')
+    setNiche(null)
+  }, [])
+
+  const handleSelectNiche = useCallback((selected: Niche) => {
+    setNiche(selected)
+    setAppState('niche')
   }, [])
 
   // Avoid flash of survey before hydration completes
@@ -131,6 +140,7 @@ export default function Home() {
         <div key="idle" className="animate-fade-in">
           <HeroSection
             onSubmit={wrappedSubmit}
+            onSelectNiche={handleSelectNiche}
             isLoading={false}
             profile={profile}
             onEditProfile={handleEditProfile}
@@ -151,6 +161,12 @@ export default function Home() {
             onShareCard={() => setShowCard(true)}
             onReset={handleReset}
           />
+        </div>
+      )}
+
+      {appState === 'niche' && niche && (
+        <div key="niche" className="animate-fade-in">
+          <NicheResults niche={niche} profile={profile} onReset={handleReset} />
         </div>
       )}
 

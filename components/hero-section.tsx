@@ -3,17 +3,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { ParticleField } from './particle-field'
 import { ProfileBadge } from './profile-badge'
+import { NicheButtons, type Niche } from './niche-buttons'
 import type { UserProfile } from '@/lib/user-profile'
 import { getSituationPlaceholders } from '@/lib/user-profile'
 
 interface HeroSectionProps {
   onSubmit: (input: string) => void
+  onSelectNiche?: (niche: Niche) => void
   isLoading: boolean
   profile?: UserProfile | null
   onEditProfile?: () => void
 }
 
-export function HeroSection({ onSubmit, isLoading, profile, onEditProfile }: HeroSectionProps) {
+export function HeroSection({ onSubmit, onSelectNiche, isLoading, profile, onEditProfile }: HeroSectionProps) {
   const [input, setInput] = useState('')
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const [displayedPlaceholder, setDisplayedPlaceholder] = useState('')
@@ -181,6 +183,11 @@ export function HeroSection({ onSubmit, isLoading, profile, onEditProfile }: Her
             )}
           </button>
         </div>
+
+        {/* Niche shortcuts — 2x2 grid */}
+        {onSelectNiche && (
+          <NicheButtons onSelect={onSelectNiche} />
+        )}
 
         {/* Footer tag */}
         <p
