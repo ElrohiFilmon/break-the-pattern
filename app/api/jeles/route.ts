@@ -22,10 +22,26 @@ export async function POST(req: Request) {
     const modelMessages = await convertToModelMessages(messages)
 
     const result = streamText({
-      // gpt-5-mini is zero-config on the Vercel AI Gateway and supports the
-      // long-context, instruction-heavy system prompt Jeles uses.
-      // Note: the GPT-5 family ignores custom temperature, so we omit it.
-      model: 'openai/gpt-5-mini',
+      // ──────────────────────────────────────────────────────────────────
+      // PATH A — Vercel AI Gateway (default, no API key required)
+      // Gemini is zero-config on the Gateway. Just pass a model string.
+      // To switch models, change this string (e.g. 'google/gemini-3-flash').
+      // ──────────────────────────────────────────────────────────────────
+      model: 'google/gemini-3-flash',
+
+      // ──────────────────────────────────────────────────────────────────
+      // PATH B — Use your own Gemini API key (direct Google provider)
+      // 1. In v0, click the top-right gear → "Vars" and add:
+      //      GOOGLE_GENERATIVE_AI_API_KEY = <your Gemini key>
+      // 2. Replace the `model:` line above with the two lines below
+      //    (and add `import { google } from '@ai-sdk/google'` at the top):
+      //
+      //      import { google } from '@ai-sdk/google'
+      //      ...
+      //      model: google('gemini-2.5-flash'),
+      //
+      // The AI SDK auto-reads GOOGLE_GENERATIVE_AI_API_KEY from env.
+      // ──────────────────────────────────────────────────────────────────
       system,
       messages: modelMessages,
     })
