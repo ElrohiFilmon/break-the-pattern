@@ -1,35 +1,29 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { AppProvider } from '@/lib/context'
-import { Navigation } from '@/components/navigation'
-import { JelesChatWidget } from '@/components/jeles-chat-widget'
+import type { Metadata, Viewport } from 'next'
+import { Space_Grotesk } from 'next/font/google'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'PatternBreaker Addis | Break Your Patterns',
-  description: 'Challenge your patterns with AI-powered insights from four unique perspectives.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+  title: 'TOHI PatternBreaker Addis',
+  description: 'Break your stuck patterns with AI-powered 24-hour city challenges. Built for young people in Addis Ababa.',
+  keywords: ['Addis Ababa', 'life coach', 'AI', 'habits', 'pattern breaking', 'Ethiopia'],
+  openGraph: {
+    title: 'TOHI PatternBreaker Addis',
+    description: 'Break your loop. Start a new pattern. — አዲስ መንገድ ጀምር',
+    type: 'website',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0F0F1A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -38,22 +32,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background dark">
-      <body className="font-sans antialiased bg-black text-white">
-        <AppProvider>
-          <Navigation />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <JelesChatWidget 
-            primaryColor="#ff5c00"
-            secondaryColor="#ff0099"
-            position="bottom-right"
-            agentName="Jeles"
-            greeting="Hi! How can I help you today?"
-          />
-        </AppProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+    <html lang="en" className="bg-[#0F0F1A]" style={{ colorScheme: 'dark' }}>
+      <body className={`${spaceGrotesk.className} antialiased bg-[#0F0F1A] text-white`}>
+        {children}
       </body>
     </html>
   )
