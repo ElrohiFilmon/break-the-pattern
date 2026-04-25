@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AppProvider } from '@/lib/context'
 import { Navigation } from '@/components/navigation'
+import { JelesChatWidget } from '@/components/jeles-chat-widget'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -44,6 +45,13 @@ export default function RootLayout({
           <main className="min-h-screen">
             {children}
           </main>
+          <JelesChatWidget 
+            primaryColor="#ff5c00"
+            secondaryColor="#ff0099"
+            position="bottom-right"
+            agentName="Jeles"
+            greeting="Hi! How can I help you today?"
+          />
         </AppProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
