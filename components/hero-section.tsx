@@ -11,9 +11,10 @@ interface HeroSectionProps {
   isLoading: boolean
   profile?: UserProfile | null
   onEditProfile?: () => void
+  onOpenChat?: () => void
 }
 
-export function HeroSection({ onSubmit, isLoading, profile, onEditProfile }: HeroSectionProps) {
+export function HeroSection({ onSubmit, isLoading, profile, onEditProfile, onOpenChat }: HeroSectionProps) {
   const [input, setInput] = useState('')
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const [displayedPlaceholder, setDisplayedPlaceholder] = useState('')
@@ -181,6 +182,22 @@ export function HeroSection({ onSubmit, isLoading, profile, onEditProfile }: Her
             )}
           </button>
         </div>
+
+        {/* Open Chat link */}
+        {onOpenChat && (
+          <div
+            className="animate-fade-in-up delay-400"
+            style={{ opacity: 0, animationFillMode: 'forwards' }}
+          >
+            <button
+              onClick={onOpenChat}
+              className="text-sm underline underline-offset-4 transition-opacity hover:opacity-70"
+              style={{ color: '#A0A0A0' }}
+            >
+              Or chat with TOHI Agent →
+            </button>
+          </div>
+        )}
 
         {/* Footer tag */}
         <p

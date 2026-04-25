@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk } from 'next/font/google'
+import { ProfileProvider } from '@/app/context/ProfileContext'
+import { JelesChat } from '@/components/JelesChat'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -34,7 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[#0F0F1A]" style={{ colorScheme: 'dark' }}>
       <body className={`${spaceGrotesk.className} antialiased bg-[#0F0F1A] text-white`}>
-        {children}
+        <ProfileProvider>
+          {children}
+          <JelesChat />
+        </ProfileProvider>
       </body>
     </html>
   )
