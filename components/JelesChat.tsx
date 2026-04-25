@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { getJelesResponse, toJelesProfile, type ConversationStage } from '@/lib/jeles-engine'
+import { toJelesProfile, type ConversationStage, type JelesProfile } from '@/lib/jeles-engine'
 import { useProfile } from '@/app/context/ProfileContext'
 
 type Msg = { from: 'jeles' | 'user'; text: string; extra?: string }
+type ApiMsg = { role: 'user' | 'assistant'; content: string }
+type JelesApiResponse = { text: string; microChallenge?: string | null; followUp?: ConversationStage | null }
 
 export function JelesChat() {
   const { profile } = useProfile()
   const [open, setOpen] = useState(false)
   const [msgs, setMsgs] = useState<Msg[]>([])
+  const [apiMsgs, setApiMsgs] = useState<ApiMsg[]>([])
   const [input, setInput] = useState('')
   const [stage, setStage] = useState<ConversationStage>('greeting')
   const [typing, setTyping] = useState(false)
@@ -27,17 +30,43 @@ export function JelesChat() {
     if (open) inputRef.current?.focus()
   }, [open])
 
-  const simulateTyping = useCallback(
-    (response: ReturnType<typeof getJelesResponse>) => {
+  const callJeles = useCallback(
+    async (userInput: string, jelesProfile: JelesProfile, currentStage: ConversationStage, history: ApiMsg[]) => {
       setTyping(true)
-      setTimeout(() => {
-        setTyping(false)
-        const extra = response.microChallenge
-          ? `Micro-challenge: ${response.microChallenge}`
+      try {
+        const res = await fetch('/api/jeles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userInput,
+            profile: jelesProfile,
+            stage: currentStage,
+            messages: history,
+          }),
+        })
+
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`)
+        }
+
+        const data: JelesApiResponse = await res.json()
+
+        const extra = data.microChallenge
+          ? `Micro-challenge: ${data.microChallenge}`
           : undefined
-        setMsgs((prev) => [...prev, { from: 'jeles', text: response.text, extra }])
-        if (response.followUp) setStage(response.followUp)
-      }, 1200)
+
+        setMsgs((prev) => [...prev, { from: 'jeles', text: data.text, extra }])
+        setApiMsgs((prev) => [...prev, { role: 'assistant', content: data.text }])
+
+        if (data.followUp) setStage(data.followUp)
+      } catch {
+        setMsgs((prev) => [
+          ...prev,
+          { from: 'jeles', text: 'Something went wrong. Give it a moment and try again.' },
+        ])
+      } finally {
+        setTyping(false)
+      }
     },
     []
   )
@@ -47,17 +76,19 @@ export function JelesChat() {
     if (open && !hasGreeted.current && profile) {
       hasGreeted.current = true
       const jelesProfile = toJelesProfile(profile)
-      simulateTyping(getJelesResponse('', jelesProfile, 'greeting'))
+      callJeles('', jelesProfile, 'greeting', [])
     }
-  }, [open, profile, simulateTyping])
+  }, [open, profile, callJeles])
 
   function send() {
     if (!input.trim() || !profile || typing) return
     const text = input.trim()
     setMsgs((prev) => [...prev, { from: 'user', text }])
+    const newApiMsgs: ApiMsg[] = [...apiMsgs, { role: 'user', content: text }]
+    setApiMsgs(newApiMsgs)
     setInput('')
     const jelesProfile = toJelesProfile(profile)
-    simulateTyping(getJelesResponse(text, jelesProfile, stage))
+    callJeles(text, jelesProfile, stage, newApiMsgs)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

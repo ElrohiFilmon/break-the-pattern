@@ -1,41 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createGroq } from '@ai-sdk/groq'
+import { generateText } from 'ai'
 import { analyzePattern } from '@/lib/pattern-engine'
-import { generateContextualResponse } from '@/lib/response-engine'
 import type { UserProfile as LibUserProfile } from '@/lib/user-profile'
-import type { UserProfile as ContextUserProfile, ConversationMessage } from '@/app/context/ProfileContext'
+import type { ConversationMessage } from '@/app/context/ProfileContext'
 
-// ─── Helper: map lib UserProfile fields to ContextUserProfile ─────────────────
-function toContextProfile(profile: LibUserProfile): ContextUserProfile {
-  return {
-    situation: profile.situation,
-    situationDetail: profile.situationDetail,
-    liveArea: profile.liveArea,
-    hangoutArea: profile.hangoutArea,
-    accessPoints: profile.accessPoints,
-    freeTime: profile.freeTime,
-    budget: profile.budget,
-    transport: profile.transport,
-    networkSize: profile.networkSize,
-    interests: profile.interests,
-    meetingStyle: profile.meetingStyle,
-    completedSurvey: true,
-  }
+const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
+
+// ─── System prompt for TOHI main chat ────────────────────────────────────────
+
+function buildChatSystemPrompt(profile: LibUserProfile | null): string {
+  const area = profile?.hangoutArea || profile?.liveArea || 'Addis Ababa'
+  const situation = profile?.situation || ''
+  const situationDetail = profile?.situationDetail || ''
+  const freeTime = profile?.freeTime || '2–4 hours'
+  const budget = profile?.budget || '500–1,500 birr'
+  const interests = profile?.interests?.join(', ') || 'general interests'
+  const networkSize = profile?.networkSize || ''
+  const meetingStyle = profile?.meetingStyle || ''
+
+  return `You are TOHI, an intelligent personal development assistant for people in Addis Ababa, Ethiopia.
+TOHI stands for "Too Often Held In" — you help users identify and break the patterns keeping them stuck.
+
+USER CONTEXT:
+- Location: ${area}, Addis Ababa
+- Situation: ${situation}${situationDetail ? ` (${situationDetail})` : ''}
+- Free time daily: ${freeTime}
+- Monthly budget: ${budget}
+- Interests: ${interests}
+${networkSize ? `- Network size: ${networkSize}` : ''}
+${meetingStyle ? `- Preferred meeting style: ${meetingStyle}` : ''}
+
+YOUR ROLE:
+- Provide sharp, personalised guidance rooted in the Addis Ababa context
+- Reference real Addis venues when suggesting actions: Tomoca, Kaldi's, iceaddis, Gebeya, Zoma Museum, Netsa Art Village, Fendika Cultural Center, Jan Meda, Meskel Square, Alliance Ethio-Française
+- Give concrete, actionable advice calibrated to this person's budget and available time
+- If they describe a recurring loop or stuck pattern, name it clearly and give one specific micro-challenge to break it
+- Keep responses focused — 3-5 sentences. Avoid generic advice.
+- When relevant, suggest follow-up questions that are specific to their situation
+
+RESPONSE FORMAT:
+Respond ONLY with valid JSON. No markdown, no extra text outside the JSON:
+{
+  "answer": "your main response (3-5 focused sentences)",
+  "followUpPrompts": ["short follow-up question 1", "short follow-up question 2", "short follow-up question 3"]
+}`
 }
 
-const EMPTY_CONTEXT_PROFILE: ContextUserProfile = {
-  situation: '',
-  situationDetail: '',
-  liveArea: '',
-  hangoutArea: '',
-  accessPoints: [],
-  freeTime: '',
-  budget: '',
-  transport: [],
-  networkSize: '',
-  interests: [],
-  meetingStyle: '',
-  completedSurvey: false,
-}
+// ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -59,21 +71,38 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // ── Chat / agent mode ── routes through the multi-intent response engine
+    // ── Chat / agent mode — powered by Groq ──────────────────────────────────
     if (mode === 'chat') {
-      const contextProfile: ContextUserProfile = profile ? toContextProfile(profile) : EMPTY_CONTEXT_PROFILE
-      const history: ConversationMessage[] = conversationHistory ?? []
+      const systemPrompt = buildChatSystemPrompt(profile ?? null)
 
-      const response = generateContextualResponse({
-        userInput: userInput.trim(),
-        profile: contextProfile,
-        conversationHistory: history,
+      // Include last 8 messages of history for context
+      const priorMessages = (conversationHistory ?? [])
+        .slice(-8)
+        .map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }))
+
+      const { text } = await generateText({
+        model: groq('llama-3.3-70b-versatile'),
+        system: systemPrompt,
+        messages: [...priorMessages, { role: 'user', content: userInput.trim() }],
+        maxTokens: 500,
+        temperature: 0.7,
       })
 
-      return NextResponse.json(response)
+      const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
+      const parsed = JSON.parse(cleaned)
+
+      return NextResponse.json({
+        type: 'contextual_answer',
+        intent: 'contextual_answer',
+        answer: parsed.answer ?? text,
+        followUpPrompts: parsed.followUpPrompts ?? [],
+      })
     }
 
-    // ── Legacy pattern-break mode ── direct analyzePattern call
+    // ── Legacy pattern-break mode — local analyzePattern ────────────────────
     const result = analyzePattern(userInput.trim(), profile ?? null)
     return NextResponse.json(result)
   } catch (err) {
