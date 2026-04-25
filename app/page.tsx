@@ -8,13 +8,14 @@ import { PatternBrokenCard } from '@/components/pattern-broken-card'
 import { ErrorState } from '@/components/error-state'
 import { Survey } from '@/components/survey'
 import { NicheResults } from '@/components/niche-results'
+import { JelesChat } from '@/components/jeles-chat'
 import type { Niche } from '@/components/niche-buttons'
 import type { PatternBreak } from '@/lib/types'
 import type { StoredProfile } from '@/lib/user-profile'
 import { loadProfile, saveProfile } from '@/lib/user-profile'
 import type { UserProfile } from '@/lib/user-profile'
 
-type AppState = 'hydrating' | 'survey' | 'idle' | 'loading' | 'results' | 'error' | 'niche'
+type AppState = 'hydrating' | 'survey' | 'idle' | 'loading' | 'results' | 'error' | 'niche' | 'jeles'
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('hydrating')
@@ -121,6 +122,10 @@ export default function Home() {
     setAppState('niche')
   }, [])
 
+  const handleOpenJeles = useCallback(() => {
+    setAppState('jeles')
+  }, [])
+
   // Avoid flash of survey before hydration completes
   if (appState === 'hydrating') return null
 
@@ -141,6 +146,7 @@ export default function Home() {
           <HeroSection
             onSubmit={wrappedSubmit}
             onSelectNiche={handleSelectNiche}
+            onOpenJeles={handleOpenJeles}
             isLoading={false}
             profile={profile}
             onEditProfile={handleEditProfile}
@@ -167,6 +173,12 @@ export default function Home() {
       {appState === 'niche' && niche && (
         <div key="niche" className="animate-fade-in">
           <NicheResults niche={niche} profile={profile} onReset={handleReset} />
+        </div>
+      )}
+
+      {appState === 'jeles' && (
+        <div key="jeles" className="animate-fade-in">
+          <JelesChat profile={profile} onClose={handleReset} />
         </div>
       )}
 
