@@ -13,7 +13,6 @@ const navItems: NavItem[] = [
   { label: 'Home', path: '/' },
   { label: 'Challenge', path: '/challenge' },
   { label: 'History', path: '/history' },
-  { label: 'Stats', path: '/stats' },
 ];
 
 export function Navigation() {

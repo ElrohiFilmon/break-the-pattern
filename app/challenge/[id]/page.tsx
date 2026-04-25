@@ -3,10 +3,8 @@
 import { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAppContext } from '@/lib/context';
-import { AgentCard } from '@/components/agent-card';
-import { ShareableCard } from '@/components/shareable-card';
+import { JelesResponseCard } from '@/components/jeles-response-card';
 import { Button } from '@/components/ui/button';
-import { AGENT_ORDER } from '@/lib/agents';
 import html2canvas from 'html2canvas';
 import { shareCard, canShare } from '@/lib/share';
 import { analytics } from '@/lib/analytics';
@@ -35,10 +33,10 @@ export default function ChallengeDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Challenge Not Found</h1>
           <p className="text-gray-400 mb-6">This challenge doesn&apos;t exist or has been deleted.</p>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   const handleExportCard = async () => {
     if (!cardRef.current) return;
@@ -51,9 +49,9 @@ export default function ChallengeDetailPage() {
 
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
-      link.download = `pattern-breaker-${challenge.id}.png`;
+      link.download = `pattern-breaker-jeles-${challenge.id}.png`;
       link.click();
-      
+
       analytics.trackCardExported(challenge.id);
     } catch (error) {
       console.error('Failed to export card:', error);
@@ -72,12 +70,82 @@ export default function ChallengeDetailPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-black via-slate-900 to-black">
-      <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:py-20">
         {/* Challenge Header */}
         <div className="mb-10 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">Your Challenge</h1>
           <p className="text-base sm:text-lg text-gray-300 leading-relaxed">{challenge.text}</p>
         </div>
+
+        {/* Jeles Response */}
+        <div className="mb-12 sm:mb-14">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Jeles Analysis</h2>
+          <JelesResponseCard
+            response={challenge.response}
+            isLoading={challenge.isLoading}
+            error={challenge.error}
+          />
+        </div>
+
+        {/* Shareable Card Section */}
+        <div className="mb-12 sm:mb-14">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">Shareable Card</h2>
+          <div
+            ref={cardRef}
+            className="flex justify-center mb-6 p-3 sm:p-4 rounded-lg bg-black/50 border border-white/10 overflow-hidden"
+          >
+            <div className="w-full max-w-xs sm:max-w-sm">
+              {/* Card will render here */}
+              <div className="rounded-lg border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-6 aspect-video flex items-center justify-center">
+                <p className="text-center text-gray-400 text-sm">Shareable card preview</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <Button
+              onClick={handleExportCard}
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg"
+            >
+              Download Card
+            </Button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          {canShare() && (
+            <Button
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+              onClick={handleShareCard}
+            >
+              Share Challenge
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              alert('Challenge link copied to clipboard!');
+            }}
+          >
+            Copy Link
+          </Button>
+          <Button
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10"
+            onClick={() => {
+              window.location.href = '/challenge';
+            }}
+          >
+            New Challenge
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
         {/* Responses Grid */}
         <div className="mb-12 sm:mb-14">

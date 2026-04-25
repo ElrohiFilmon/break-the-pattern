@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useAppContext } from '@/lib/context';
-import { PatternCard } from '@/components/pattern-card';
 import { Button } from '@/components/ui/button';
-import { Empty } from '@/components/ui/empty';
 import { clearHistory as clearStoredHistory } from '@/lib/storage';
 import { analytics } from '@/lib/analytics';
+import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,9 +39,9 @@ export default function HistoryPage() {
             <p className="text-5xl mb-4">📋</p>
             <h2 className="text-2xl font-bold text-white mb-2">No challenges yet</h2>
             <p className="text-gray-400 mb-8 text-center">Start by creating your first challenge to break a pattern.</p>
-            <Button 
-              onClick={() => window.location.href = '/challenge'}
-              className="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 text-white font-semibold"
+            <Button
+              onClick={() => (window.location.href = '/challenge')}
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold"
             >
               Create First Challenge
             </Button>
@@ -66,9 +66,44 @@ export default function HistoryPage() {
           </Button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {history.map((challenge) => (
-            <PatternCard key={challenge.id} challenge={challenge} />
+            <Link key={challenge.id} href={`/challenge/${challenge.id}`}>
+              <div className="rounded-lg border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/50 hover:bg-cyan-500/10 cursor-pointer group">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-400 mb-2">
+                      {formatDistanceToNow(new Date(challenge.timestamp), { addSuffix: true })}
+                    </p>
+                    <p className="text-lg text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
+                      {challenge.text}
+                    </p>
+                    {challenge.response && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-sm text-cyan-300 font-semibold mb-1">
+                          {challenge.response.title}
+                        </p>
+                        <p className="text-xs text-gray-400 line-clamp-1">
+                          {challenge.response.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                    {challenge.response && (
+                      <span className="inline-block px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 text-xs text-green-300 font-medium">
+                        Analyzed
+                      </span>
+                    )}
+                    {challenge.isLoading && (
+                      <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-xs text-blue-300 font-medium">
+                        Analyzing...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
 

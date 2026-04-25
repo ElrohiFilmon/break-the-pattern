@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext } from '@/lib/context';
-import { AGENT_ORDER } from '@/lib/agents';
-import { getAllMockResponses } from '@/lib/mock-responses';
-import { Challenge, Response } from '@/lib/types';
+import { Challenge } from '@/lib/types';
+import { jelesClient, JelesResponse } from '@/lib/jeles-client';
 import { analytics } from '@/lib/analytics';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +15,7 @@ export default function ChallengePage() {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState('');
   const { addChallenge } = useAppContext();
   const router = useRouter();
 
@@ -29,32 +28,34 @@ export default function ChallengePage() {
     if (!text.trim() || !mounted) return;
 
     setIsLoading(true);
+    setError('');
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Call Jeles API
+      const response: JelesResponse = await jelesClient.analyzeChallenge(text);
 
-    // Generate responses from all agents
-    const mockResponses = getAllMockResponses(AGENT_ORDER);
-    const responses: Response[] = AGENT_ORDER.map((agentId) => ({
-      agentId,
-      text: mockResponses[agentId],
-      timestamp: Date.now(),
-    }));
+      const challenge: Challenge = {
+        id: Date.now().toString(),
+        text,
+        category: 'personal',
+        timestamp: Date.now(),
+        response,
+        cardExported: false,
+      };
 
-    const challenge: Challenge = {
-      id: Date.now().toString(),
-      text,
-      category: 'personal', // Default category
-      timestamp: Date.now(),
-      responses,
-      cardExported: false,
-    };
+      addChallenge(challenge);
+      analytics.trackChallengeCreated('personal');
 
-    addChallenge(challenge);
-    analytics.trackChallengeCreated('personal');
-    
-    if (mounted) {
-      router.push(`/challenge/${challenge.id}`);
+      if (mounted) {
+        router.push(`/challenge/${challenge.id}`);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to analyze challenge';
+      setError(errorMessage);
+      console.error('Challenge submission error:', err);
+      analytics.trackError('challenge_submission', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,7 +69,7 @@ export default function ChallengePage() {
         <div className="mb-10 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">What&apos;s Your Pattern?</h1>
           <p className="text-base sm:text-lg text-gray-400 leading-relaxed">
-            Describe a pattern you want to break, a habit you're struggling with, or a challenge you're facing. Be specific and honest.
+            Describe a pattern you want to break, a habit you're struggling with, or a challenge you're facing. Be specific and honest so Jeles can provide the most accurate analysis.
           </p>
         </div>
 
@@ -87,17 +88,30 @@ export default function ChallengePage() {
             />
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={!text.trim() || isLoading}
-            className="w-full bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-6"
+            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-6"
           >
-            {isLoading ? 'Getting Responses...' : 'Get Responses'}
+            {isLoading ? 'Jeles is analyzing...' : 'Get Jeles Analysis'}
           </Button>
 
           {isLoading && (
             <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-center">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400">This may take a moment as Jeles analyzes your challenge...</p>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
                 Our advisors are thinking about your challenge...
               </p>
             </div>

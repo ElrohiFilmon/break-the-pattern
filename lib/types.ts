@@ -1,14 +1,11 @@
-export interface Agent {
-  id: 'pink' | 'gold' | 'green' | 'cyan';
-  name: string;
-  color: string;
-  bgColor: string;
-  icon: string;
-}
-
-export interface Response {
-  agentId: Agent['id'];
-  text: string;
+export interface JelesResponse {
+  id: string;
+  title: string;
+  description: string;
+  insights: string[];
+  actionItems: string[];
+  sentiment: 'positive' | 'neutral' | 'challenging';
+  confidence: number;
   timestamp: number;
 }
 
@@ -17,7 +14,9 @@ export interface Challenge {
   text: string;
   category: string;
   timestamp: number;
-  responses: Response[];
+  response: JelesResponse | null;
+  isLoading?: boolean;
+  error?: string;
   cardExported: boolean;
 }
 
