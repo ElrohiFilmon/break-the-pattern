@@ -10,13 +10,12 @@ import { getSituationPlaceholders } from '@/lib/user-profile'
 interface HeroSectionProps {
   onSubmit: (input: string) => void
   onSelectNiche?: (niche: Niche) => void
-  onOpenJeles?: () => void
   isLoading: boolean
   profile?: UserProfile | null
   onEditProfile?: () => void
 }
 
-export function HeroSection({ onSubmit, onSelectNiche, onOpenJeles, isLoading, profile, onEditProfile }: HeroSectionProps) {
+export function HeroSection({ onSubmit, onSelectNiche, isLoading, profile, onEditProfile }: HeroSectionProps) {
   const [input, setInput] = useState('')
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const [displayedPlaceholder, setDisplayedPlaceholder] = useState('')
@@ -184,64 +183,6 @@ export function HeroSection({ onSubmit, onSelectNiche, onOpenJeles, isLoading, p
             )}
           </button>
         </div>
-
-        {/* Jeles launcher */}
-        {onOpenJeles && (
-          <div
-            className="w-full animate-fade-in-up delay-300"
-            style={{ opacity: 0, animationFillMode: 'forwards' }}
-          >
-            <button
-              onClick={onOpenJeles}
-              className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 hover:scale-[1.01]"
-              style={{
-                background: 'rgba(0,255,136,0.07)',
-                border: '1px solid rgba(0,255,136,0.25)',
-              }}
-              aria-label="Talk to Jeles, your AI life coach"
-            >
-              {/* Avatar */}
-              <div
-                className="relative shrink-0 w-11 h-11 rounded-full flex items-center justify-center font-bold text-lg"
-                style={{
-                  background: 'rgba(0,255,136,0.14)',
-                  border: '1px solid rgba(0,255,136,0.4)',
-                  color: '#00FF88',
-                }}
-                aria-hidden="true"
-              >
-                J
-                <span
-                  className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
-                  style={{
-                    background: '#00FF88',
-                    border: '2px solid #0F0F1A',
-                    animation: 'pulse 2s ease-in-out infinite',
-                  }}
-                />
-              </div>
-
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-sm leading-tight">
-                  Talk to Jeles
-                </p>
-                <p className="text-xs mt-0.5 truncate" style={{ color: '#A0A0A0' }}>
-                  Break habits &middot; overcome procrastination &middot; real challenges
-                </p>
-              </div>
-
-              {/* Arrow */}
-              <span
-                className="shrink-0 font-bold text-base"
-                style={{ color: '#00FF88' }}
-                aria-hidden="true"
-              >
-                →
-              </span>
-            </button>
-          </div>
-        )}
 
         {/* Niche shortcuts — 2x2 grid */}
         {onSelectNiche && (
